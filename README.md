@@ -1,11 +1,11 @@
 # Remote Switch
 Arduino sketch to control a remote switch (relay) via web UI
 
-# Dependencies
+## Dependencies
 
  - Webduino https://github.com/sirleech/Webduino
 
-# Default settings
+## Default settings
 
 Username: admin
 
