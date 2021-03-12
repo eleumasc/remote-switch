@@ -1,0 +1,185 @@
+<!--
+  TODO:
+  - Remove <base> tag
+  - Compress HTML
+  - Compress JS
+  - Remove unused CSS (watch out for the w3-green and w3-dark-gray classes) and integrate the result with a <style> tag
+  - Replace '\' with '\\' and '"' with '\"' (in this order)
+-->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Remote Switch</title>
+  <base href="http://192.168.1.200/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css" integrity="sha256-dtWUyNYkPxNLKNWtgz1S8jvvZCgqMjNF7WYByVjOFb4=" crossorigin="anonymous">
+</head>
+<body>
+
+  <header class="w3-container w3-teal">
+    <h1 id="deviceName">Remote Switch</h1>
+  </header>
+
+  <div class="w3-content" style="max-width:800px">
+    <div class="w3-container">
+
+      <div id="switchCard" class="w3-panel w3-card">
+        <p class="w3-center">
+          <button id="switchButton" class="w3-btn w3-round w3-disabled" style="width:150px;height:150px;font-size:4rem">&#128161;</button>
+        </p>
+        <p class="w3-center">
+          Last update: <i id="lastUpdate">unknown</i>
+        </p>
+      </div>
+
+      <p class="w3-center">
+        <button id="showSettingsButton" class="w3-btn w3-teal">Show settings</button>
+      </p>
+
+      <div id="settings" class="w3-panel w3-card" style="display:none">
+        <form method="POST" action="password">
+          <p>
+            <input id="newPassword" class="w3-input" type="password" name="password" required minlength="8" maxlength="25">
+            <label>New password</label>
+          </p>
+          <p class="w3-center">
+            <button type="submit" class="w3-btn w3-teal">Save</button>
+          </p>
+        </form>
+
+        <form method="POST" action="deviceName">
+          <p>
+            <input id="newDeviceName" class="w3-input" type="text" name="deviceName" required maxlength="25">
+            <label>New device name</label>
+          </p>
+          <p class="w3-center">
+            <button type="submit" class="w3-btn w3-teal">Save</button>
+          </p>
+        </form>
+
+        <form method="POST" action="ipConfig">
+          <p>
+            <input id="enableDhcp" class="w3-check" type="checkbox" name="dhcp">
+            <label>Enable DHCP</label>
+          </p>
+          <p>
+            <input id="staticIP" class="w3-input" type="text" name="staticIP" required>
+            <label>IP address</label>
+          </p>
+          <p>
+            <input id="subnetMask" class="w3-input" type="text" name="subnetMask" required>
+            <label>Subnet mask</label>
+          </p>
+          <p>
+            <input id="gatewayIP" class="w3-input" type="text" name="gatewayIP">
+            <label>Default gateway</label>
+          </p>
+          <p class="w3-center">
+            <button type="submit" class="w3-btn w3-teal">Save</button>
+          </p>
+        </form>
+
+        <form method="POST" action="reset"
+          onsubmit="return confirm('This will reset Remote Switch. Do you want to proceed?')">
+          <p class="w3-center">
+            <button type="submit" class="w3-btn w3-yellow">Reset</button>
+          </p>
+        </form>
+
+        <form method="POST" action="hardReset"
+          onsubmit="return confirm('This will reset all configuration settings to their default values. Do you want to proceed?')">
+          <p class="w3-center">
+            <button type="submit" class="w3-btn w3-red">Restore configuration</button>
+          </p>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  (async function(document) {
+
+    var uiDeviceName = document.getElementById("deviceName");
+    var uiSwitchButton = document.getElementById("switchButton");
+    var uiLastUpdate = document.getElementById("lastUpdate");
+    var uiShowSettingsButton = document.getElementById("showSettingsButton");
+    var uiSettings = document.getElementById("settings");
+    var uiEnableDhcp = document.getElementById("enableDhcp");
+    var uiStaticIP = document.getElementById("staticIP");
+    var uiSubnetMask = document.getElementById("subnetMask");
+    var uiGatewayIP = document.getElementById("gatewayIP");
+
+    async function getStatus() {
+      var res = await fetch("status", {
+        mode: "same-origin",
+      });
+      var status = await res.json();
+      return status;
+    }
+
+    var status = await getStatus();
+
+    uiDeviceName.textContent = status.deviceName;
+
+    function updateSwitchButton() {
+      uiSwitchButton.classList.remove("w3-disabled");
+      uiSwitchButton.classList.add(status.switchStatus ? "w3-green" : "w3-dark-gray");
+      uiLastUpdate.textContent = new Date().toUTCString();
+    }
+
+    updateSwitchButton();
+
+    async function toggleSwitch() {
+      var toggle = status.switchStatus ? 0 : 1;
+      uiSwitchButton.classList.remove("w3-green", "w3-dark-gray");
+      uiSwitchButton.classList.add("w3-disabled");
+      var res = await fetch("switchStatus", {
+        method: "POST",
+        mode: "same-origin",
+        body: "toggle=" + toggle
+      });
+      if (res.status === 200) {
+        status.switchStatus = toggle;
+      }
+      updateSwitchButton();
+    }
+
+    uiSwitchButton.addEventListener("click", toggleSwitch);
+
+    uiShowSettingsButton.addEventListener("click", function() {
+      this.style.display = "none";
+      uiSettings.style.display = "block";
+    });
+
+    var IP_ADDRESS_PATTERN = "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+    uiStaticIP.pattern = IP_ADDRESS_PATTERN;
+    uiSubnetMask.pattern = IP_ADDRESS_PATTERN;
+    uiGatewayIP.pattern = IP_ADDRESS_PATTERN;
+
+    function updateEnableDhcp() {
+      uiStaticIP.disabled = uiEnableDhcp.checked;
+      uiStaticIP.value = "";
+      uiSubnetMask.disabled = uiEnableDhcp.checked;
+      uiSubnetMask.value = "";
+      uiGatewayIP.disabled = uiEnableDhcp.checked;
+      uiGatewayIP.value = "";
+    }
+
+    uiEnableDhcp.checked = !status.staticIP;
+    updateEnableDhcp();
+    if (status.staticIP) {
+      uiStaticIP.value = status.staticIP;
+      uiSubnetMask.value = status.subnetMask;
+      uiGatewayIP.value = status.gatewayIP;
+    }
+
+    uiEnableDhcp.addEventListener("change", updateEnableDhcp);
+
+  })(document);
+  </script>
+
+</body>
+</html>
