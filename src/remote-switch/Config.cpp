@@ -42,7 +42,7 @@ void Config::encodeBase64(char* dest, const char* source) {
     dest[d++] = encodeCharBase64((buff & 0x0f) << 2);
     dest[d++] = '=';
   }
-  dest[d++] = '\0';
+  dest[d] = '\0';
 }
 
 uint32_t Config::reverseByteOrder(uint32_t x) {

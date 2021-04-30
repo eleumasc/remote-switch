@@ -4,7 +4,7 @@
 #define WEBDUINO_NO_IMPLEMENTATION
 
 #include <Arduino.h>
-#include <WebServer.h>
+#include "WebServer.h"
 
 class WebApp {
 

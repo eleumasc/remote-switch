@@ -3,12 +3,12 @@
 #include "Config.h"
 #include <SPI.h>
 #include <Ethernet.h>
-#include <WebServer.h>
+#include "WebServer.h"
 #include "WebApp.h"
 
 const void (*__reset)(void) = 0;
 
-const byte MAC_ADDRESS[6] = { 0x90, 0xA2, 0xDA, 0x8B, 0x54, 0x61 };
+byte MAC_ADDRESS[6] = { 0x90, 0xA2, 0xDA, 0x8B, 0x54, 0x61 };
 
 WebServer ws("", 80);
 
